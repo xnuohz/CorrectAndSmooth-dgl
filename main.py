@@ -117,7 +117,7 @@ if __name__ == '__main__':
     """
     Correct & Smoothing Hyperparameters
     """
-    parser = argparse.ArgumentParser(description='Base predictor')
+    parser = argparse.ArgumentParser(description='Base predictor(C&S)')
 
     # Dataset
     parser.add_argument('--gpu', type=int, default=0)
