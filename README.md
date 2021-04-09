@@ -1,15 +1,42 @@
-<!-- ### Author's code
+# DGL Implementation of CorrectAndSmooth
 
-         train   valid   test
-before   62.85           55.58
-c & s            70.37   68.72
+This DGL example implements the GNN model proposed in the paper [Combining Label Propagation and Simple Models Out-performs Graph Neural Networks](https://arxiv.org/abs/2010.13993). For the original implementation, see [here](https://github.com/CUAI/CorrectAndSmooth).
 
-(MLP + C & S)
+Contributor: [xnuohz](https://github.com/xnuohz)
 
-### Ours
+### Requirements
+The codebase is implemented in Python 3.7. For version requirement of packages, see below.
 
-         train   valid   test
-before   59.95   53.55   55.06
-c & s            71.51   69.75
+```
+dgl 0.6.0.post1
+torch 1.7.0
+ogb 1.3.0
+```
 
-(MLP + C & S) -->
+### The graph datasets used in this example
+
+Open Graph Benchmark(OGB). Dataset summary:
+
+|  Dataset   | #Nodes  |  #Edges   | #Node Feats |  Metric  |
+| :--------: | :-----: | :-------: | :---------: | :------: |
+| ogbn-arxiv | 169,343 | 1,166,243 |     128     | Accuracy |
+
+### Usage
+
+Training a **Base predictor** and using **Correct&Smooth** which follows the original hyperparameters on different datasets.
+```bash
+# Dataset: ogbn-arxiv
+# step 1: training base predictor
+python main.py
+# step 2: correct & smoothing
+python main.py --pretrain
+```
+
+### Performance
+
+#### ogbn-arxiv
+
+|                 |  MLP  | MLP + C&S |
+| :-------------: | :---: | :-------: |
+| Results(Author) | 55.58 |   68.72   |
+|  Results(DGL)   | 55.06 |   69.75   |
