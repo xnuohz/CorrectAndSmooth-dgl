@@ -17,9 +17,10 @@ ogb 1.3.0
 
 Open Graph Benchmark(OGB). Dataset summary:
 
-|  Dataset   | #Nodes  |  #Edges   | #Node Feats |  Metric  |
-| :--------: | :-----: | :-------: | :---------: | :------: |
-| ogbn-arxiv | 169,343 | 1,166,243 |     128     | Accuracy |
+|    Dataset    |  #Nodes   |   #Edges   | #Node Feats |  Metric  |
+| :-----------: | :-------: | :--------: | :---------: | :------: |
+|  ogbn-arxiv   |  169,343  | 1,166,243  |     128     | Accuracy |
+| ogbn-products | 2,449,029 | 61,859,140 |     100     | Accuracy |
 
 ### Usage
 
@@ -41,6 +42,21 @@ python main.py --model linear
 python main.py --model linear --pretrain --correction-alpha 0.8 --smoothing-alpha 0.6
 ```
 
+##### ogbn-products
+
+* **MLP + C&S**
+
+```bash
+
+```
+
+* **Linear + C&S**
+
+```bash
+python main.py --dataset ogbn-products --model linear
+python main.py --dataset ogbn-products --model linear --pretrain --correction-alpha 0.6 --smoothing-alpha 0.9
+```
+
 ### Performance
 
 #### ogbn-arxiv
@@ -49,3 +65,10 @@ python main.py --model linear --pretrain --correction-alpha 0.8 --smoothing-alph
 | :-------------: | :---: | :-------: | :----: | :----------: |
 | Results(Author) | 55.58 |   68.72   | 51.06  |    70.24     |
 |  Results(DGL)   | 55.06 |   69.75   | 51.06  |    70.14     |
+
+#### ogbn-products
+
+|                 |  MLP  | MLP + C&S | Linear | Linear + C&S |
+| :-------------: | :---: | :-------: | :----: | :----------: |
+| Results(Author) | 60.22 |   83.75   | 47.67  |    82.34     |
+|  Results(DGL)   |  OOM  |    OOM    | 47.76  |    79.27     |

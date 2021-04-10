@@ -27,7 +27,13 @@ def main():
     split_idx = dataset.get_idx_split()
     g, labels = dataset[0] # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
 
-    g = dgl.to_bidirected(g, copy_ndata=True).to(device)
+    if args.dataset == 'ogbn-arxiv':
+        g = dgl.to_bidirected(g, copy_ndata=True).to(device)
+    elif args.dataset == 'ogbn-products':
+        g = g.to(device)
+    else:
+        raise ValueError(f'Dataset {args.dataset} is not supported.')
+    
     labels = labels.to(device)
 
     # load masks for train / validation / test
