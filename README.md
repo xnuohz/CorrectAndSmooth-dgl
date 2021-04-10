@@ -24,19 +24,28 @@ Open Graph Benchmark(OGB). Dataset summary:
 ### Usage
 
 Training a **Base predictor** and using **Correct&Smooth** which follows the original hyperparameters on different datasets.
+
+##### ogbn-arxiv
+
+* **MLP + C&S**
+
 ```bash
-# Dataset: ogbn-arxiv
-# step 1: training base predictor
 python main.py
-# step 2: correct & smoothing
 python main.py --pretrain
+```
+
+* **Linear + C&S**
+
+```bash
+python main.py --model linear
+python main.py --model linear --pretrain --correction-alpha 0.8 --smoothing-alpha 0.6
 ```
 
 ### Performance
 
 #### ogbn-arxiv
 
-|                 |  MLP  | MLP + C&S |
-| :-------------: | :---: | :-------: |
-| Results(Author) | 55.58 |   68.72   |
-|  Results(DGL)   | 55.06 |   69.75   |
+|                 |  MLP  | MLP + C&S | Linear | Linear + C&S |
+| :-------------: | :---: | :-------: | :----: | :----------: |
+| Results(Author) | 55.58 |   68.72   | 51.06  |    70.24     |
+|  Results(DGL)   | 55.06 |   69.75   | 51.06  |    70.14     |

@@ -41,8 +41,10 @@ def main():
     # load model
     if args.model == 'mlp':
         model = MLP(n_features, args.hid_dim, n_classes, args.num_layers, args.dropout).to(device)
-    else:
+    elif args.model == 'linear':
         model = MLPLinear(n_features, n_classes).to(device)
+    else:
+        raise NotImplementedError(f'Model {args.model} is not supported.')
 
     print(f'Model parameters: {sum(p.numel() for p in model.parameters())}')
 
