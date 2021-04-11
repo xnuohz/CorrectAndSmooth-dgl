@@ -26,14 +26,8 @@ def main():
 
     split_idx = dataset.get_idx_split()
     g, labels = dataset[0] # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
-
-    if args.dataset == 'ogbn-arxiv':
-        g = dgl.to_bidirected(g, copy_ndata=True).to(device)
-    elif args.dataset == 'ogbn-products':
-        g = g.to(device)
-    else:
-        raise ValueError(f'Dataset {args.dataset} is not supported.')
     
+    feats = g.ndata['feat'].to(device)
     labels = labels.to(device)
 
     # load masks for train / validation / test
@@ -41,7 +35,7 @@ def main():
     valid_idx = split_idx["valid"].to(device)
     test_idx = split_idx["test"].to(device)
 
-    n_features = g.ndata['feat'].size()[-1]
+    n_features = feats.size()[-1]
     n_classes = dataset.num_classes
     
     # load model
@@ -55,6 +49,13 @@ def main():
     print(f'Model parameters: {sum(p.numel() for p in model.parameters())}')
 
     if args.pretrain:
+        if args.dataset == 'ogbn-arxiv':
+            g = dgl.to_bidirected(g, copy_ndata=True).to(device)
+        elif args.dataset == 'ogbn-products':
+            g = g.to(device)
+        else:
+            raise ValueError(f'Dataset {args.dataset} is not supported.')
+        
         print('---------- Before ----------')
         model.load_state_dict(torch.load(f'base/{args.dataset}-{args.model}.pt'))
         model.eval()
@@ -89,7 +90,7 @@ def main():
         for i in range(args.epochs):
             model.train()
             opt.zero_grad()
-            logits = model(g.ndata['feat'])
+            logits = model(feats)
             train_loss = F.nll_loss(logits[train_idx], labels.squeeze(1)[train_idx])
             train_loss.backward()
             opt.step()
@@ -110,7 +111,7 @@ def main():
         # testing & saving model
         print('---------- Testing ----------')
         best_model.eval()
-        logits = best_model(g.ndata['feat'])
+        logits = best_model(feats)
         y_pred = logits.argmax(dim=-1, keepdim=True)
         test_acc = evaluate(y_pred, labels, test_idx, evaluator)
         print(f'Test acc: {test_acc:.4f}')
