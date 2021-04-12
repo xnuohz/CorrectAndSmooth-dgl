@@ -65,7 +65,7 @@ python main.py --dataset ogbn-products --model linear --pretrain --correction-al
 |                 |  MLP  | MLP + C&S | Linear | Linear + C&S |  GAT  | GAT + C&S |
 | :-------------: | :---: | :-------: | :----: | :----------: | :---: | :-------: |
 | Results(Author) | 55.58 |   68.72   | 51.06  |    70.24     | 73.28 |   73.64   |
-|  Results(DGL)   | 55.06 |   69.75   | 51.06  |    70.14     |       |           |
+|  Results(DGL)   | 55.06 |   69.75   | 51.06  |    70.14     | 72.02 |   72.79   |
 
 #### ogbn-products
 

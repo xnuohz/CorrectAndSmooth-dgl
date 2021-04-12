@@ -71,7 +71,12 @@ def main():
         print('---------- Before ----------')
         model.load_state_dict(torch.load(f'base/{args.dataset}-{args.model}.pt'))
         model.eval()
-        y_soft = model(g.ndata['feat']).exp()
+
+        if args.model == 'gat':
+            y_soft = model(g, feats).exp()
+        else:
+            y_soft = model(feats).exp()
+
         y_pred = y_soft.argmax(dim=-1, keepdim=True)
         valid_acc = evaluate(y_pred, labels, valid_idx, evaluator)
         test_acc = evaluate(y_pred, labels, test_idx, evaluator)
@@ -91,7 +96,10 @@ def main():
         test_acc = evaluate(y_pred, labels, test_idx, evaluator)
         print(f'Valid acc: {valid_acc:.4f} | Test acc: {test_acc:.4f}')
     else:
-        opt = optim.Adam(model.parameters(), lr=args.lr)
+        if args.model == 'gat':
+            opt = optim.RMSprop(model.parameters(), lr=args.lr)
+        else:
+            opt = optim.Adam(model.parameters(), lr=args.lr)
 
         best_acc = 0
         best_model = copy.deepcopy(model)
@@ -160,7 +168,6 @@ if __name__ == '__main__':
     parser.add_argument('--dropout', type=float, default=0.4)
     parser.add_argument('--lr', type=float, default=0.01)
     parser.add_argument('--epochs', type=int, default=300)
-    parser.add_argument('--runs', type=int, default=10)
     # extra options for gat
     parser.add_argument('--n-heads', type=int, default=3)
     parser.add_argument('--attn_drop', type=float, default=0.05)
