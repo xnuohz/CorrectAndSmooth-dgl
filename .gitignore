@@ -135,6 +135,7 @@ Icon
 !wrapper/*.jar
 !**/wrapper/*.jar
 
+*.log
 /dataset
 /base
 __pycache__/
