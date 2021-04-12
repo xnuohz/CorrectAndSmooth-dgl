@@ -141,7 +141,7 @@ def main():
         if os.path.exists('base') is False:
             os.makedirs('base')
 
-        torch.save(model.state_dict(), f'base/{args.dataset}-{args.model}.pt')
+        torch.save(best_model.state_dict(), f'base/{args.dataset}-{args.model}.pt')
 
 
 if __name__ == '__main__':
