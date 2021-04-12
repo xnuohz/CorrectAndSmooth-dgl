@@ -7,7 +7,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import dgl
 from ogb.nodeproppred import DglNodePropPredDataset, Evaluator
-from model import MLP, MLPLinear, CorrectAndSmooth
+from model import MLP, MLPLinear, GAT, CorrectAndSmooth
 
 
 def evaluate(y_pred, y_true, idx, evaluator):
@@ -27,7 +27,16 @@ def main():
     split_idx = dataset.get_idx_split()
     g, labels = dataset[0] # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
     
-    feats = g.ndata['feat'].to(device)
+    if args.dataset == 'ogbn-arxiv':
+        if args.model == 'gat':
+            srcs, dsts = g.all_edges()
+            g.add_edges(dsts, srcs)
+            g = g.add_self_loop()
+        else:
+            g = dgl.to_bidirected(g, copy_ndata=True)
+
+    g = g.to(device)
+    feats = g.ndata['feat']
     labels = labels.to(device)
 
     # load masks for train / validation / test
@@ -40,22 +49,25 @@ def main():
     
     # load model
     if args.model == 'mlp':
-        model = MLP(n_features, args.hid_dim, n_classes, args.num_layers, args.dropout).to(device)
+        model = MLP(n_features, args.hid_dim, n_classes, args.num_layers, args.dropout)
     elif args.model == 'linear':
-        model = MLPLinear(n_features, n_classes).to(device)
+        model = MLPLinear(n_features, n_classes)
+    elif args.model == 'gat':
+        model = GAT(in_feats=n_features,
+                    n_classes=n_classes,
+                    n_hidden=args.hid_dim,
+                    n_layers=args.num_layers,
+                    n_heads=args.n_heads,
+                    activation=F.relu,
+                    dropout=args.dropout,
+                    attn_drop=args.attn_drop)
     else:
         raise NotImplementedError(f'Model {args.model} is not supported.')
 
+    model = model.to(device)
     print(f'Model parameters: {sum(p.numel() for p in model.parameters())}')
 
     if args.pretrain:
-        if args.dataset == 'ogbn-arxiv':
-            g = dgl.to_bidirected(g, copy_ndata=True).to(device)
-        elif args.dataset == 'ogbn-products':
-            g = g.to(device)
-        else:
-            raise ValueError(f'Dataset {args.dataset} is not supported.')
-        
         print('---------- Before ----------')
         model.load_state_dict(torch.load(f'base/{args.dataset}-{args.model}.pt'))
         model.eval()
@@ -79,7 +91,6 @@ def main():
         test_acc = evaluate(y_pred, labels, test_idx, evaluator)
         print(f'Valid acc: {valid_acc:.4f} | Test acc: {test_acc:.4f}')
     else:
-        model.reset_parameters()
         opt = optim.Adam(model.parameters(), lr=args.lr)
 
         best_acc = 0
@@ -90,9 +101,15 @@ def main():
         for i in range(args.epochs):
             model.train()
             opt.zero_grad()
-            logits = model(feats)
+
+            if args.model == 'gat':
+                logits = model(g, feats)
+            else:
+                logits = model(feats)
+            
             train_loss = F.nll_loss(logits[train_idx], labels.squeeze(1)[train_idx])
             train_loss.backward()
+
             opt.step()
             
             model.eval()
@@ -111,7 +128,12 @@ def main():
         # testing & saving model
         print('---------- Testing ----------')
         best_model.eval()
-        logits = best_model(feats)
+        
+        if args.model == 'gat':
+            logits = best_model(g, feats)
+        else:
+            logits = best_model(feats)
+        
         y_pred = logits.argmax(dim=-1, keepdim=True)
         test_acc = evaluate(y_pred, labels, test_idx, evaluator)
         print(f'Test acc: {test_acc:.4f}')
@@ -132,13 +154,16 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--dataset', type=str, default='ogbn-arxiv')
     # Base predictor
-    parser.add_argument('--model', type=str, default='mlp')
+    parser.add_argument('--model', type=str, default='mlp', choices=['mlp', 'linear', 'gat'])
     parser.add_argument('--num-layers', type=int, default=3)
     parser.add_argument('--hid-dim', type=int, default=256)
     parser.add_argument('--dropout', type=float, default=0.4)
     parser.add_argument('--lr', type=float, default=0.01)
     parser.add_argument('--epochs', type=int, default=300)
     parser.add_argument('--runs', type=int, default=10)
+    # extra options for gat
+    parser.add_argument('--n-heads', type=int, default=3)
+    parser.add_argument('--attn_drop', type=float, default=0.05)
     # C & S
     parser.add_argument('--pretrain', action='store_true')
     parser.add_argument('--num-correction-layers', type=int, default=50)

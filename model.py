@@ -10,6 +10,7 @@ class MLPLinear(nn.Module):
     def __init__(self, in_dim, out_dim):
         super(MLPLinear, self).__init__()
         self.linear = nn.Linear(in_dim, out_dim)
+        self.reset_parameters()
     
     def reset_parameters(self):
         self.linear.reset_parameters()
@@ -34,6 +35,7 @@ class MLP(nn.Module):
         
         self.linears.append(nn.Linear(hid_dim, out_dim))
         self.dropout = dropout
+        self.reset_parameters()
 
     def reset_parameters(self):
         for layer in self.linears:
@@ -124,7 +126,7 @@ class GAT(nn.Module):
         h = h.mean(1)
         h = self.bias_last(h)
 
-        return h
+        return F.log_softmax(h, dim=-1)
 
 class LabelPropagation(nn.Module):
     r"""

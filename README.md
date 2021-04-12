@@ -45,7 +45,8 @@ python main.py --model linear --pretrain --correction-alpha 0.8 --smoothing-alph
 * **GAT + C&S**
 
 ```bash
-
+python main.py --model gat --epochs 2000 --lr 0.002 --dropout 0.75
+python main.py --model gat --pretrain
 ```
 
 ##### ogbn-products
