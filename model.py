@@ -130,7 +130,23 @@ class GAT(nn.Module):
 
 class LabelPropagation(nn.Module):
     r"""
-    
+
+    Description
+    -----------
+    Introduced in `Learning from Labeled and Unlabeled Datawith Label Propagation <https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.14.3864&rep=rep1&type=pdf>`_
+
+    .. math::
+        \mathbf{Y}^{\prime} = \alpha \cdot \mathbf{D}^{-1/2} \mathbf{A}
+        \mathbf{D}^{-1/2} \mathbf{Y} + (1 - \alpha) \mathbf{Y},
+
+    where unlabeled data is inferred by labeled data via propagation.
+
+    Parameters
+    ----------
+        num_layers: int
+            The number of propagations.
+        alpha: float
+            The :math:`\alpha` coefficient.
     """
     def __init__(self, num_layers, alpha):
         super(LabelPropagation, self).__init__()
@@ -164,7 +180,25 @@ class LabelPropagation(nn.Module):
 
 class CorrectAndSmooth(nn.Module):
     r"""
-    
+
+    Description
+    -----------
+    Introduced in `Combining Label Propagation and Simple Models Out-performs Graph Neural Networks <https://arxiv.org/abs/2010.13993>`_
+
+    Parameters
+    ----------
+        num_correction_layers: int
+            The number of correct propagations.
+        correction_alpha: float
+            The coefficient of correction.
+        num_smoothing_layers: int
+            The number of smooth propagations.
+        smoothing_alpha: float
+            The coefficient of smoothing.
+        autoscale: bool, optional
+            If set to True, will automatically determine the scaling factor :math:`\sigma`. Default is True.
+        scale: float, optional
+            The scaling factor :math:`\sigma`, in case :obj:`autoscale = False`. Default is 1.
     """
     def __init__(self,
                  num_correction_layers,
