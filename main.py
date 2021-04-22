@@ -6,6 +6,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import dgl
+import time
+
 from ogb.nodeproppred import DglNodePropPredDataset, Evaluator
 from model import MLP, MLPLinear, GAT, CorrectAndSmooth
 
@@ -103,11 +105,13 @@ def main():
 
         best_acc = 0
         best_model = copy.deepcopy(model)
+        times = []
 
         # training
         print('---------- Training ----------')
         for i in range(args.epochs):
             model.train()
+            t = time.time()
             opt.zero_grad()
 
             if args.model == 'gat':
@@ -119,6 +123,8 @@ def main():
             train_loss.backward()
 
             opt.step()
+            if i >= 10:
+                times.append(time.time() - t)
             
             model.eval()
             with torch.no_grad():
@@ -145,6 +151,7 @@ def main():
         y_pred = logits.argmax(dim=-1, keepdim=True)
         test_acc = evaluate(y_pred, labels, test_idx, evaluator)
         print(f'Test acc: {test_acc:.4f}')
+        print(f'Training time: {sum(times) / len(times)}')
 
         if os.path.exists('base') is False:
             os.makedirs('base')
