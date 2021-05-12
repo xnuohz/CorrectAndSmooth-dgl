@@ -2,12 +2,9 @@ import argparse
 import copy
 import os
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import dgl
-import time
-
 from ogb.nodeproppred import DglNodePropPredDataset, Evaluator
 from model import MLP, MLPLinear, GAT, CorrectAndSmooth
 
@@ -27,7 +24,7 @@ def main():
     evaluator = Evaluator(name=args.dataset)
 
     split_idx = dataset.get_idx_split()
-    g, labels = dataset[0] # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
+    g, labels = dataset[0] # graph: DGLGraph object, label: torch tensor of shape (num_nodes, num_tasks)
     
     if args.dataset == 'ogbn-arxiv':
         if args.model == 'gat':
@@ -89,7 +86,6 @@ def main():
                               correction_alpha=args.correction_alpha,
                               num_smoothing_layers=args.num_smoothing_layers,
                               smoothing_alpha=args.smoothing_alpha,
-                              autoscale=args.autoscale,
                               scale=args.scale)
         y_soft = cs.correct(g, y_soft, labels[train_idx], train_idx)
         y_soft = cs.smooth(g, y_soft, labels[train_idx], train_idx)
@@ -105,13 +101,11 @@ def main():
 
         best_acc = 0
         best_model = copy.deepcopy(model)
-        times = []
 
         # training
         print('---------- Training ----------')
         for i in range(args.epochs):
             model.train()
-            t = time.time()
             opt.zero_grad()
 
             if args.model == 'gat':
@@ -123,8 +117,6 @@ def main():
             train_loss.backward()
 
             opt.step()
-            if i >= 10:
-                times.append(time.time() - t)
             
             model.eval()
             with torch.no_grad():
@@ -151,9 +143,8 @@ def main():
         y_pred = logits.argmax(dim=-1, keepdim=True)
         test_acc = evaluate(y_pred, labels, test_idx, evaluator)
         print(f'Test acc: {test_acc:.4f}')
-        print(f'Training time: {sum(times) / len(times)}')
 
-        if os.path.exists('base') is False:
+        if not os.path.exists('base'):
             os.makedirs('base')
 
         torch.save(best_model.state_dict(), f'base/{args.dataset}-{args.model}.pt')
@@ -166,8 +157,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Base predictor(C&S)')
 
     # Dataset
-    parser.add_argument('--gpu', type=int, default=0)
-    parser.add_argument('--dataset', type=str, default='ogbn-arxiv')
+    parser.add_argument('--gpu', type=int, default=0, help='-1 for cpu')
+    parser.add_argument('--dataset', type=str, default='ogbn-arxiv', choices=['ogbn-arxiv', 'ogbn-products'])
     # Base predictor
     parser.add_argument('--model', type=str, default='mlp', choices=['mlp', 'linear', 'gat'])
     parser.add_argument('--num-layers', type=int, default=3)
@@ -179,12 +170,11 @@ if __name__ == '__main__':
     parser.add_argument('--n-heads', type=int, default=3)
     parser.add_argument('--attn_drop', type=float, default=0.05)
     # C & S
-    parser.add_argument('--pretrain', action='store_true')
+    parser.add_argument('--pretrain', action='store_true', help='Whether to perform C & S')
     parser.add_argument('--num-correction-layers', type=int, default=50)
     parser.add_argument('--correction-alpha', type=float, default=0.979)
     parser.add_argument('--num-smoothing-layers', type=int, default=50)
     parser.add_argument('--smoothing-alpha', type=float, default=0.756)
-    parser.add_argument('--autoscale', type=bool, default=True)
     parser.add_argument('--scale', type=float, default=20.)
 
     args = parser.parse_args()

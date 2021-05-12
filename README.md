@@ -69,7 +69,14 @@ python main.py --dataset ogbn-products --model linear --pretrain --correction-al
 
 #### ogbn-products
 
-|                 |  MLP  | MLP + C&S | Linear | Linear + C&S |
-| :-------------: | :---: | :-------: | :----: | :----------: |
-| Results(Author) | 60.22 |   83.75   | 47.67  |    82.34     |
-|  Results(DGL)   |  OOM  |    OOM    | 47.76  |    79.27     |
+|                 | Linear | Linear + C&S |
+| :-------------: | :----: | :----------: |
+| Results(Author) | 47.67  |    82.34     |
+|  Results(DGL)   | 47.76  |    79.27     |
+
+### Speed
+
+|      ogb-arxiv       |      Time     | GPU Memory | Params  |
+| :------------------: | :-----------: | :--------: | :-----: |
+| Author, Linear + C&S | 6.3 * 10 ^ -3 |   1,248M   |  5,160  |
+|   DGL, Linear + C&S  | 5.6 * 10 ^ -3 |   1,252M   |  5,160  |
