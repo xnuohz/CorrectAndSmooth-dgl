@@ -93,9 +93,12 @@ def main():
         print('---------- Correct & Smoothing ----------')
         cs = CorrectAndSmooth(num_correction_layers=args.num_correction_layers,
                               correction_alpha=args.correction_alpha,
+                              correction_adj=args.correction_adj,
                               num_smoothing_layers=args.num_smoothing_layers,
                               smoothing_alpha=args.smoothing_alpha,
+                              smoothing_adj=args.smoothing_adj,
                               scale=args.scale)
+        
         mask_idx = torch.cat([train_idx, valid_idx])
         if args.model != 'gat':
             y_soft = cs.correct(g, y_soft, labels[mask_idx], mask_idx)
@@ -192,8 +195,10 @@ if __name__ == '__main__':
     parser.add_argument('--pretrain', action='store_true', help='Whether to perform C & S')
     parser.add_argument('--num-correction-layers', type=int, default=50)
     parser.add_argument('--correction-alpha', type=float, default=0.979)
+    parser.add_argument('--correction-adj', type=str, default='DAD')
     parser.add_argument('--num-smoothing-layers', type=int, default=50)
     parser.add_argument('--smoothing-alpha', type=float, default=0.756)
+    parser.add_argument('--smoothing-adj', type=str, default='DAD')
     parser.add_argument('--scale', type=float, default=20.)
 
     args = parser.parse_args()
