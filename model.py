@@ -172,25 +172,19 @@ class LabelPropagation(nn.Module):
             
             last = (1 - self.alpha) * y
             degs = g.in_degrees().float().clamp(min=1)
-            norm = torch.pow(degs, -0.5).to(labels.device).unsqueeze(1)
+            norm = torch.pow(degs, -0.5 if self.adj == 'DAD' else -1).to(labels.device).unsqueeze(1)
 
             for _ in range(self.num_layers):
                 # Assume the graphs to be undirected
-                if self.adj != 'AD':
-                    # DAD or DA
+                if self.adj in ['DAD', 'AD']:
                     y = norm * y
-                    if self.adj == 'DA':
-                        y = norm * y
                 
                 g.ndata['h'] = y
                 g.update_all(fn.copy_u('h', 'm'), fn.sum('m', 'h'))
                 y = self.alpha * g.ndata.pop('h')
 
-                if self.adj != 'DA':
-                    # DAD or AD
+                if self.adj in ['DAD', 'DA']:
                     y = y * norm
-                    if self.adj == 'AD':
-                        y = y * norm
                 
                 y = post_step(last + y)
             
