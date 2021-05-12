@@ -31,14 +31,14 @@ Training a **Base predictor** and using **Correct&Smooth** which follows the ori
 * **MLP + C&S**
 
 ```bash
-python main.py
+python main.py --dropout 0.5
 python main.py --pretrain
 ```
 
 * **Linear + C&S**
 
 ```bash
-python main.py --model linear
+python main.py --model linear --dropout 0.5 --epochs 1000
 python main.py --model linear --pretrain --correction-alpha 0.8 --smoothing-alpha 0.6
 ```
 
@@ -54,7 +54,7 @@ python main.py --model gat --pretrain
 * **Linear + C&S**
 
 ```bash
-python main.py --dataset ogbn-products --model linear
+python main.py --dataset ogbn-products --model linear --dropout 0.5 --epochs 1000 --lr 0.1
 python main.py --dataset ogbn-products --model linear --pretrain --correction-alpha 0.6 --smoothing-alpha 0.9
 ```
 
@@ -65,14 +65,14 @@ python main.py --dataset ogbn-products --model linear --pretrain --correction-al
 |                 |  MLP  | MLP + C&S | Linear | Linear + C&S |  GAT  | GAT + C&S |
 | :-------------: | :---: | :-------: | :----: | :----------: | :---: | :-------: |
 | Results(Author) | 55.58 |   68.72   | 51.06  |    70.24     | 73.28 |   73.64   |
-|  Results(DGL)   | 55.06 |   69.75   | 51.06  |    70.14     | 72.02 |   72.79   |
+|  Results(DGL)   | 56.12 |   72.52   | 52.49  |    72.66     | 72.59 |   73.30   |
 
 #### ogbn-products
 
 |                 | Linear | Linear + C&S |
 | :-------------: | :----: | :----------: |
 | Results(Author) | 47.67  |    82.34     |
-|  Results(DGL)   | 47.76  |    79.27     |
+|  Results(DGL)   | 47.71  |    79.57     |
 
 ### Speed
 

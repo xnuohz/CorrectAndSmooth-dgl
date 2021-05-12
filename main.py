@@ -9,6 +9,12 @@ from ogb.nodeproppred import DglNodePropPredDataset, Evaluator
 from model import MLP, MLPLinear, GAT, CorrectAndSmooth
 
 
+def adjust_learning_rate(optimizer, lr, epoch):
+    if epoch <= 50:
+        for param_group in optimizer.param_groups:
+            param_group["lr"] = lr * epoch / 50
+
+
 def evaluate(y_pred, y_true, idx, evaluator):
     return evaluator.eval({
         'y_true': y_true[idx],
@@ -28,11 +34,14 @@ def main():
     
     if args.dataset == 'ogbn-arxiv':
         if args.model == 'gat':
-            srcs, dsts = g.all_edges()
-            g.add_edges(dsts, srcs)
+            g = dgl.add_reverse_edges(g, copy_ndata=True)
             g = g.add_self_loop()
         else:
             g = dgl.to_bidirected(g, copy_ndata=True)
+        
+        feat = g.ndata['feat']
+        feat = (feat - feat.mean(0)) / feat.std(0)
+        g.ndata['feat'] = feat
 
     g = g.to(device)
     feats = g.ndata['feat']
@@ -87,8 +96,10 @@ def main():
                               num_smoothing_layers=args.num_smoothing_layers,
                               smoothing_alpha=args.smoothing_alpha,
                               scale=args.scale)
-        y_soft = cs.correct(g, y_soft, labels[train_idx], train_idx)
-        y_soft = cs.smooth(g, y_soft, labels[train_idx], train_idx)
+        mask_idx = torch.cat([train_idx, valid_idx])
+        if args.model != 'gat':
+            y_soft = cs.correct(g, y_soft, labels[mask_idx], mask_idx)
+        y_soft = cs.smooth(g, y_soft, labels[mask_idx], mask_idx)
         y_pred = y_soft.argmax(dim=-1, keepdim=True)
         valid_acc = evaluate(y_pred, labels, valid_idx, evaluator)
         test_acc = evaluate(y_pred, labels, test_idx, evaluator)
@@ -105,6 +116,9 @@ def main():
         # training
         print('---------- Training ----------')
         for i in range(args.epochs):
+            if args.model == 'gat':
+                adjust_learning_rate(opt, args.lr, i)
+
             model.train()
             opt.zero_grad()
 
@@ -120,6 +134,11 @@ def main():
             
             model.eval()
             with torch.no_grad():
+                if args.model == 'gat':
+                    logits = model(g, feats)
+                else:
+                    logits = model(feats)
+                
                 y_pred = logits.argmax(dim=-1, keepdim=True)
 
                 train_acc = evaluate(y_pred, labels, train_idx, evaluator)

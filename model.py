@@ -45,8 +45,9 @@ class MLP(nn.Module):
 
     def forward(self, x):
         for linear, bn in zip(self.linears[:-1], self.bns):
-            x = bn(linear(x))
+            x = linear(x)
             x = F.relu(x, inplace=True)
+            x = bn(x)
             x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.linears[-1](x)
         return F.log_softmax(x, dim=-1)
@@ -174,7 +175,6 @@ class LabelPropagation(nn.Module):
                 g.update_all(fn.copy_u('h', 'm'), fn.sum('m', 'h'))
                 y = last + self.alpha * g.ndata.pop('h') * norm
                 y = post_step(y)
-                last = (1 - self.alpha) * y
             
             return y
 
