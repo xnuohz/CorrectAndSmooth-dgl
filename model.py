@@ -149,8 +149,8 @@ class LabelPropagation(nn.Module):
             The :math:`\alpha` coefficient.
         adj: str
             'DAD': D^-0.5 * A * D^-0.5
-            'DA': D * A
-            'AD': A * D
+            'DA': D^-1 * A
+            'AD': A * D^-1
     """
     def __init__(self, num_layers, alpha, adj='DAD'):
         super(LabelPropagation, self).__init__()
@@ -206,16 +206,16 @@ class CorrectAndSmooth(nn.Module):
             The coefficient of correction.
         correction_adj: str
             'DAD': D^-0.5 * A * D^-0.5
-            'DA': D * A
-            'AD': A * D
+            'DA': D^-1 * A
+            'AD': A * D^-1
         num_smoothing_layers: int
             The number of smooth propagations.
         smoothing_alpha: float
             The coefficient of smoothing.
         smoothing_adj: str
             'DAD': D^-0.5 * A * D^-0.5
-            'DA': D * A
-            'AD': A * D
+            'DA': D^-1 * A
+            'AD': A * D^-1
         autoscale: bool, optional
             If set to True, will automatically determine the scaling factor :math:`\sigma`. Default is True.
         scale: float, optional
